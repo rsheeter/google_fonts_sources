@@ -19,8 +19,12 @@ def source_dir(name):
     return wd
 
 
+def failure_dir():
+    return source_dir("failures")
+
+
 def failure_file(failure_type):
-    return source_dir("failures") / (failure_type + ".txt")
+    return failure_dir() / (failure_type + ".txt")
 
 
 def main(argv):
@@ -28,6 +32,8 @@ def main(argv):
     assert gf_repo.is_dir()
 
     status_dir = source_dir("status")
+    for stale_file in failure_dir().iterdir():
+        stale_file.unlink()
 
     upstream_files = list(gf_repo.rglob("upstream.yaml"))
     failures = []
@@ -52,9 +58,6 @@ def main(argv):
         status_file = status_dir / (upstream_file.stem + ".status")
         if status_file.is_file():
             continue
-
-
-
 
     count_by_type = defaultdict(int)
     for failure in failures:

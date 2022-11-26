@@ -1,16 +1,10 @@
 from absl import app
-from absl import flags
 from collections import defaultdict
+import gf_upstream
 from pathlib import Path
 import sys
 from urllib.parse import urlparse
 import yaml
-
-
-FLAGS = flags.FLAGS
-
-
-flags.DEFINE_string("gf_repo", str(Path.home() / "oss" / "fonts"), "A local clone of https://github.com/google/fonts")
 
 
 def source_dir(name):
@@ -28,14 +22,12 @@ def failure_file(failure_type):
 
 
 def main(argv):
-    gf_repo = Path(FLAGS.gf_repo)
-    assert gf_repo.is_dir()
-
     status_dir = source_dir("status")
     for stale_file in failure_dir().iterdir():
         stale_file.unlink()
 
-    upstream_files = list(gf_repo.rglob("upstream.yaml"))
+    gf_repo = gf_upstream.repo()
+    upstream_files = gf_upstream.ls()
     failures = []
     for upstream_file in upstream_files:
         with open(upstream_file) as f:

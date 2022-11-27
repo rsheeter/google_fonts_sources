@@ -2,9 +2,16 @@ from absl import app
 from collections import defaultdict
 import gf_upstream
 from pathlib import Path
+import subprocess
 import sys
 from urllib.parse import urlparse
 import yaml
+
+
+_DENY_REPO_URLS = {
+    "https://github.com/TypeNetwork/Alegreya",  # prompts for auth
+    "https://github.com/googlefonts/glory",  # prompts for auth
+}
 
 
 def source_dir(name):
@@ -17,12 +24,17 @@ def failure_dir():
     return source_dir("failures")
 
 
+def repo_dir(upstream_file):
+    lic = upstream_file.parent.parent.name
+    assert lic in ("apache", "ofl", "ufl")
+    return source_dir(lic + "/" + upstream_file.parent.name)
+
+
 def failure_file(failure_type):
     return failure_dir() / (failure_type + ".txt")
 
 
 def main(argv):
-    status_dir = source_dir("status")
     for stale_file in failure_dir().iterdir():
         stale_file.unlink()
 
@@ -47,9 +59,21 @@ def main(argv):
                     failures.append(("no_repo_url", upstream_file.relative_to(gf_repo)))
                     continue
 
-        status_file = status_dir / (upstream_file.stem + ".status")
-        if status_file.is_file():
+        if upstream.get("repository_url", "") in _DENY_REPO_URLS:
+            failures.append(("denylisted_repo_url", upstream_file.relative_to(gf_repo)))
             continue
+
+        clone_dir = repo_dir(upstream_file)
+        if (clone_dir / ".git").is_dir():
+            git_cmd = ("git", "-C", clone_dir, "pull")
+        else:
+            git_cmd = ("git", "clone", upstream["repository_url"], clone_dir)
+
+        print(" ".join(str(c) for c in git_cmd))
+        git_result = subprocess.run(git_cmd, capture_output=True)
+        if git_result.returncode != 0:
+            failures.append(("git_fail", upstream_file.relative_to(gf_repo), " ".join(str(c) for c in git_cmd), "\n" + git_result.stdout))
+
 
     count_by_type = defaultdict(int)
     for failure in failures:

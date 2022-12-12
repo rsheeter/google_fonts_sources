@@ -15,6 +15,7 @@ FLAGS = flags.FLAGS
 
 
 flags.DEFINE_bool("vf_only", False, "Only display VFs")
+flags.DEFINE_bool("mapped_only", False, "Only results where axis/map input != output")
 
 
 def main(argv):
@@ -30,6 +31,10 @@ def main(argv):
         if FLAGS.vf_only:
             axes = [(e.attrib["minimum"], e.attrib["default"], e.attrib["maximum"]) for e in ds.xpath("//axis")]
             if not any(axis for axis in axes if len(set(axis)) > 1):
+                continue
+        if FLAGS.mapped_only:
+            mappings = [(e.attrib["input"], e.attrib["output"]) for e in ds.xpath("//axis/map")]
+            if not any(m for m in mappings if m[0] != m[1]):
                 continue
         print(f"{num_glyphs:>5} {ds_file.relative_to(sources.parent)}")
 

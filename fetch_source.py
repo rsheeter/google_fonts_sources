@@ -76,7 +76,8 @@ def main(argv):
         if (clone_dir / ".git").is_dir():
             git_cmd = ("git", "-C", clone_dir, "pull")
         else:
-            git_cmd = ("git", "clone", upstream["repository_url"], clone_dir)
+            # do a faster shallow clone; `git fetch --unshallow` to get full repo
+            git_cmd = ("git", "clone", "--depth=1", upstream["repository_url"], clone_dir)
 
         print(" ".join(str(c) for c in git_cmd))
         git_result = subprocess.run(git_cmd, capture_output=True)

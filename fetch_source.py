@@ -51,9 +51,18 @@ def main(argv):
 
             if not "repository_url" in upstream:
                 maybe_archive = upstream.get("archive", "")
-                if maybe_archive is not None and maybe_archive.startswith("https://github.com"):
-                    failures.append(("github_archive_no_repo_url", upstream_file.relative_to(gf_repo)))
-                    repo_path = "/".join(urlparse(upstream["archive"]).path.split("/")[:2])
+                if maybe_archive is not None and maybe_archive.startswith(
+                    "https://github.com"
+                ):
+                    failures.append(
+                        (
+                            "github_archive_no_repo_url",
+                            upstream_file.relative_to(gf_repo),
+                        )
+                    )
+                    repo_path = "/".join(
+                        urlparse(upstream["archive"]).path.split("/")[:2]
+                    )
                     upstream["repository_url"] = "https://github.com/" + repo_path
                 else:
                     failures.append(("no_repo_url", upstream_file.relative_to(gf_repo)))
@@ -67,13 +76,20 @@ def main(argv):
         if (clone_dir / ".git").is_dir():
             git_cmd = ("git", "-C", clone_dir, "pull")
         else:
-            git_cmd = ("git", "clone", upstream["repository_url"], clone_dir)
+            # do a faster shallow clone; `git fetch --unshallow` to get full repo
+            git_cmd = ("git", "clone", "--depth=1", upstream["repository_url"], clone_dir)
 
         print(" ".join(str(c) for c in git_cmd))
         git_result = subprocess.run(git_cmd, capture_output=True)
         if git_result.returncode != 0:
-            failures.append(("git_fail", upstream_file.relative_to(gf_repo), " ".join(str(c) for c in git_cmd), "\n" + git_result.stdout))
-
+            failures.append(
+                (
+                    "git_fail",
+                    upstream_file.relative_to(gf_repo),
+                    " ".join(str(c) for c in git_cmd),
+                    "\n" + git_result.stdout.decode("utf-8"),
+                )
+            )
 
     count_by_type = defaultdict(int)
     for failure in failures:
@@ -84,10 +100,13 @@ def main(argv):
 
     print(f"{len(upstream_files)} upstream.yaml files")
     for fail_type, count in sorted(count_by_type.items()):
-        print(f"{count}/{len(upstream_files)} {fail_type} ({failure_file(fail_type).relative_to(Path(__file__).parent)})")
+        print(
+            f"{count}/{len(upstream_files)} {fail_type} ({failure_file(fail_type).relative_to(Path(__file__).parent)})"
+        )
 
     if failures:
         sys.exit(1)
+
 
 if __name__ == "__main__":
     app.run(main)

@@ -6,7 +6,11 @@ from typing import List
 FLAGS = flags.FLAGS
 
 
-flags.DEFINE_string("gf_repo", str(Path.home() / "oss" / "fonts"), "A local clone of https://github.com/google/fonts")
+flags.DEFINE_string(
+    "gf_repo",
+    str(Path.home() / "oss" / "fonts"),
+    "A local clone of https://github.com/google/fonts",
+)
 
 
 def repo() -> Path:

@@ -86,7 +86,7 @@ def main(argv):
                     "git_fail",
                     upstream_file.relative_to(gf_repo),
                     " ".join(str(c) for c in git_cmd),
-                    "\n" + git_result.stdout,
+                    "\n" + git_result.stdout.decode("utf-8"),
                 )
             )
 

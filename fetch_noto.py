@@ -63,7 +63,8 @@ def build_one_target(name, path):
     else:
         fontmake_args += ["variable"]
 
-    time_args = (["/usr/bin/time", "-p", "-o", "/tmp/time"]
+    time_args = (
+        ["/usr/bin/time", "-p", "-o", "/tmp/time"]
         + fontmake_args
         + [
             "--",
@@ -73,11 +74,11 @@ def build_one_target(name, path):
     print(f"  " + " ".join(time_args))
     rc = subprocess.run(time_args, capture_output=True)
 
-    rv = { 
+    rv = {
         "name": name,
-        "real": 0.,
-        "user": 0.,
-        "sys": 0.,
+        "real": 0.0,
+        "user": 0.0,
+        "sys": 0.0,
         "format": os.path.splitext(sources[0])[-1][1:],
         "masters": masters,
         "instances": instances,
@@ -87,7 +88,7 @@ def build_one_target(name, path):
     if rc.returncode == 0:
         with open("/tmp/time") as f:
             # the last 3 should be real #.##, user #.##, sys #.##
-            timings = [l.strip() for l in f.readlines()[-3:]]            
+            timings = [l.strip() for l in f.readlines()[-3:]]
             for time in timings:
                 time = time.split(" ")
                 assert len(time) == 2, time

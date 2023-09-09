@@ -20,4 +20,4 @@ def repo() -> Path:
 
 
 def ls() -> List[Path]:
-    return list(repo().rglob("upstream.yaml"))
+    return list(repo().rglob("METADATA.pb"))
